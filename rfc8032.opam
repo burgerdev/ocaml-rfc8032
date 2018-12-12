@@ -1,0 +1,22 @@
+opam-version: "2.0"
+name: "rfc8032"
+version: "1.0"
+maintainer: ["Markus Rudy <webmaster@burgerdev.de>"]
+authors: ["Markus Rudy"]
+homepage: "https://github.com/burgerdev/ocaml-rfc8032"
+bug-reports: "https://github.com/burgerdev/ocaml-rfc8032/issues"
+dev-repo: "git+https://github.com/burgerdev/ocaml-rfc8032.git"
+license: "BSD"
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+depends: [
+  "ocaml" { >= "4.03" }
+  "zarith" { >= "1.5" }
+  "rfc7748" { >= "1.0" }
+  "dune" { build & >= "1.2.1" }
+  "ounit" { with-test & >= "2.0.5" }
+]
+synopsis: "Digital Signatures with Edwards Curves - RFC 8032"
+description: """ TODO """
