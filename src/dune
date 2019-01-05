@@ -2,5 +2,5 @@
  (name rfc8032)
  (public_name rfc8032)
 
- (libraries rfc7748)
+ (libraries zarith nocrypto rfc7748)
 )
