@@ -8,6 +8,7 @@ _build
 .DS_Store
 *.swp
 *~
+node_modules
 
 # jbuilder
 .merlin
