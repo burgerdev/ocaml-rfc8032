@@ -14,6 +14,8 @@ type testcase = { algorithm: algorithm
                 ; signature_hex: string
                 }
 
+let assert_eq_string exp act = assert_equal ~printer:(fun s -> s) exp act
+
 let execute = function {algorithm; secret_key_hex; public_key_hex; message_hex; signature_hex} ->
   let m: (module Rfc8032.T) = match algorithm with
     | Ed25519 -> (module Rfc8032.Ed25519)
@@ -21,11 +23,23 @@ let execute = function {algorithm; secret_key_hex; public_key_hex; message_hex; 
     | _ -> failwith "test function not implemented"
   in
   let module M = (val m) in
+
+  (* key serialization *)
+  let public_key_hex_comp = M.private_key_of_hex secret_key_hex
+                            |> M.public_key_of_private_key
+                            |> M.hex_of_public_key in
+
+  assert_eq_string public_key_hex public_key_hex_comp;
+
+  (* signing *)
+
   let sig_out =
     M.sign (M.private_key_of_hex secret_key_hex) (M.data_of_hex message_hex)
-                     |> M.hex_of_signature
+    |> M.hex_of_signature
   in
-  assert_equal signature_hex sig_out;
+  assert_equal ~printer:(fun s -> s) signature_hex sig_out;
+
+  (* verifying *)
   let result = M.verify (M.public_key_of_hex public_key_hex) (M.signature_of_hex signature_hex) (M.data_of_hex message_hex) in
   assert_equal Rfc8032.Valid result
 
