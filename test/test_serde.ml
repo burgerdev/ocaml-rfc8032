@@ -5,7 +5,6 @@ open Rfc8032.Internals
 
 type z_of_cstruct_testcase = {data: string; bits: int; expected_result: int}
 
-
 let z_of_cstruct_testcases = List.map begin fun {data; bits; expected_result} ->
     Fmt.strf "data=%s,bits=%d" data bits >:: fun _ ->
       let buf = Cstruct.of_hex data in
@@ -47,6 +46,80 @@ let z_of_cstruct_testcases = List.map begin fun {data; bits; expected_result} ->
     ; {data="0a"; bits=1; expected_result=0}
     ]
 
+type bit_at_testcase = {data: string; index: int; expected_result: int}
+
+let bit_at_testcases = List.map begin fun {data; index; expected_result} ->
+    Fmt.strf "data=%s,index=%d" data index >:: fun _ ->
+      let buf = Cstruct.of_hex data in
+      let actual_result = Serde.bit_at buf index in
+      assert_equal ~printer:string_of_int
+        expected_result
+        actual_result
+  end
+    [ {data="ff"; index=7; expected_result=1}
+    ; {data="ff"; index=6; expected_result=1}
+    ; {data="ff"; index=5; expected_result=1}
+    ; {data="ff"; index=4; expected_result=1}
+    ; {data="ff"; index=3; expected_result=1}
+    ; {data="ff"; index=2; expected_result=1}
+    ; {data="ff"; index=1; expected_result=1}
+    ; {data="ff"; index=0; expected_result=1}
+    ; {data="00"; index=7; expected_result=0}
+    ; {data="00"; index=6; expected_result=0}
+    ; {data="00"; index=5; expected_result=0}
+    ; {data="00"; index=4; expected_result=0}
+    ; {data="00"; index=3; expected_result=0}
+    ; {data="00"; index=2; expected_result=0}
+    ; {data="00"; index=1; expected_result=0}
+    ; {data="00"; index=0; expected_result=0}
+    ; {data="0ff0"; index=15; expected_result=1}
+    ; {data="0ff0"; index=14; expected_result=1}
+    ; {data="0ff0"; index=13; expected_result=1}
+    ; {data="0ff0"; index=12; expected_result=1}
+    ; {data="0ff0"; index=11; expected_result=0}
+    ; {data="0ff0"; index=10; expected_result=0}
+    ; {data="0ff0"; index=9; expected_result=0}
+    ; {data="0ff0"; index=8; expected_result=0}
+    ; {data="0ff0"; index=7; expected_result=0}
+    ; {data="0ff0"; index=6; expected_result=0}
+    ; {data="0ff0"; index=5; expected_result=0}
+    ; {data="0ff0"; index=4; expected_result=0}
+    ; {data="0ff0"; index=3; expected_result=1}
+    ; {data="0ff0"; index=2; expected_result=1}
+    ; {data="0ff0"; index=1; expected_result=1}
+    ; {data="0ff0"; index=0; expected_result=1}
+    ]
+
+type set_bit_at_testcase = {data: string; index: int; expected_result: string}
+
+let set_bit_at_testcases = List.map begin fun {data; index; expected_result} ->
+    Fmt.strf "data=%s,index=%d" data index >:: fun _ ->
+      let buf = Cstruct.of_hex data in
+      let _ = Serde.set_bit_at buf index in
+      assert_equal ~printer:(Fmt.strf "%a" Cstruct.hexdump_pp)
+        (Cstruct.of_hex expected_result)
+        buf
+  end
+    [ {data="ff"; index=7; expected_result="ff"}
+    ; {data="ff"; index=6; expected_result="ff"}
+    ; {data="ff"; index=5; expected_result="ff"}
+    ; {data="ff"; index=4; expected_result="ff"}
+    ; {data="ff"; index=3; expected_result="ff"}
+    ; {data="ff"; index=2; expected_result="ff"}
+    ; {data="ff"; index=1; expected_result="ff"}
+    ; {data="ff"; index=0; expected_result="ff"}
+    ; {data="00"; index=7; expected_result="80"}
+    ; {data="00"; index=6; expected_result="40"}
+    ; {data="00"; index=5; expected_result="20"}
+    ; {data="00"; index=4; expected_result="10"}
+    ; {data="00"; index=3; expected_result="08"}
+    ; {data="00"; index=2; expected_result="04"}
+    ; {data="00"; index=1; expected_result="02"}
+    ; {data="00"; index=0; expected_result="01"}
+    ]
+
 let _ =
-  "Serialization_suite" >::: [ "decode_private" >::: z_of_cstruct_testcases ]
+  "Serialization_suite" >::: [ "z_of_cstruct" >::: z_of_cstruct_testcases
+                             ; "bit_at" >::: bit_at_testcases
+                             ; "set_bit_at" >::: set_bit_at_testcases ]
   |> run_test_tt_main

@@ -1,5 +1,5 @@
 
-
+(* TODO DANGER: destructs the given buffer! *)
 let z_of_cstruct num_bits buf =
   (* cut additional data *)
   let rem_bit = num_bits mod 8 in
@@ -13,3 +13,16 @@ let z_of_cstruct num_bits buf =
   in
   (* read Z from LE encoded string *)
   Cstruct.to_string buf |> Z.of_bits
+
+let bit_at buf i =
+  let byte_index = i / 8 in
+  let bit_index = i mod 8 in
+  let byte = Cstruct.get_uint8 buf byte_index in
+  byte asr bit_index land 1
+
+let set_bit_at buf i =
+  let byte_index = i / 8 in
+  let bit_index = i mod 8 in
+  let byte = Cstruct.get_uint8 buf byte_index in
+  let mask = 1 lsl bit_index in
+  Cstruct.set_uint8 buf byte_index (byte lor mask)
