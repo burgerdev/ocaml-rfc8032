@@ -3,3 +3,8 @@
   (libraries rfc8032 oUnit)
   (modules test_rfc)
 )
+(test
+  (name test_serde)
+  (libraries rfc8032 oUnit fmt)
+  (modules  test_serde)
+)

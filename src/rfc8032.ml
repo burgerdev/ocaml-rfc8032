@@ -19,7 +19,7 @@ module type T = sig
 end
 
 
-module Ed25519: T with type data = string = struct
+module Ed448: T with type data = string = struct
   type private_key = string
   type public_key = string
   type signature = string
@@ -35,4 +35,8 @@ module Ed25519: T with type data = string = struct
   let verify _pub _signature _data = failwith "not implemented"
 end
 
-module Ed448 = Ed25519
+module Ed25519: T = Ed448
+
+module Internals = struct
+  module Serde = Serde
+end
