@@ -66,12 +66,6 @@ module Edwards(P: PARAMS) = struct
 
   let scale p s = Gops.scale_constant_time (P.n + 1) p s
 
-  let decode_scalar buf =
-    let mask = Z.(one lsl P.c - one) in
-    Serde.z_of_cstruct P.n buf
-    |> Z.(add @@ one lsl P.n)
-    |> Z.logxor mask
-
   let decode_point buf =
     let sign = Serde.bit_at buf (P.b - 1) in
     let y = Serde.z_of_cstruct (P.b - 1) buf in
