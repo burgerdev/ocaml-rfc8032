@@ -80,13 +80,12 @@ module Edwards(P: PARAMS) = struct
       G.Point (x, y)
 
   let encode_point (G.Point (x, y)) =
+    (* TODO: extract this as Serde.cstruct_of_z. *)
     let s = Z.to_bits y in
     let buf = Cstruct.create (P.b / 8) in
     let () = Cstruct.blit_from_string s 0 buf 0 (String.length s) in
     let () = if Z.(x land one > zero) then
         Serde.set_bit_at buf (P.b - 1)
-      else if Serde.bit_at buf (P.b - 1) != 0 then
-        failwith "???"
     in
     buf
 
