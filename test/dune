@@ -13,3 +13,8 @@
   (libraries rfc8032 oUnit fmt)
   (modules  test_params)
 )
+(test
+  (name test_dsa)
+  (libraries rfc8032 oUnit fmt)
+  (modules  test_dsa)
+)

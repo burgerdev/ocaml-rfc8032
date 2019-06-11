@@ -47,6 +47,7 @@ module Params25519: PARAMS = struct
 end
 
 module Edwards(P: PARAMS) = struct
+  module P = P
   module F = Field.Fp(P)
 
   module G = struct
