@@ -39,4 +39,5 @@ module Ed25519: T = Ed448
 
 module Internals = struct
   module Serde = Serde
+module Params = Params
 end

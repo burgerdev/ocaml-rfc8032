@@ -8,3 +8,8 @@
   (libraries rfc8032 oUnit fmt)
   (modules  test_serde)
 )
+(test
+  (name test_params)
+  (libraries rfc8032 oUnit fmt)
+  (modules  test_params)
+)
