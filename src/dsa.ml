@@ -7,6 +7,7 @@ module EdDSA25519 = struct
 
   type private_key = Private_key of Z.t * Cstruct.t
   type public_key = Public_key of G.t
+  type signature = Signature of G.t * Z.t
 
   let decode_scalar =
     let mask = Z.(one lsl P.c - one |> lognot) in
@@ -33,5 +34,20 @@ module EdDSA25519 = struct
   let public_key_of_private_key = function Private_key (s, _) ->
     let a = scale base s in
     Public_key a
+
+  let sign (Private_key (s, prefix)) msg =
+    (* Section 3.3 *)
+    let r = P.H.digestv [prefix; msg] |> Serde.z_of_cstruct (2*P.b) in
+    let r' = scale base r in
+    let a = scale base s in
+
+    let h = P.H.digestv [encode_point r'; encode_point a; msg] |> Serde.z_of_cstruct (2*P.b) in
+
+    Signature (r', Z.(erem (r + h * s) P.l))
+
+  let encode_signature = function Signature (r, s) ->
+    let r = encode_point r in
+    let s = Serde.cstruct_of_z P.b s in
+    Cstruct.concat [r; s]
 
 end
