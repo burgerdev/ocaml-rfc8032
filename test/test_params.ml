@@ -3,7 +3,7 @@ open OUnit
 open Rfc8032.Internals
 
 let rec range ?start:(start=0) = function
-  | n when n < start -> []
+  | n when n <= start -> []
   | n -> n - 1 :: range ~start (n - 1)
 
 let pp_point =
@@ -62,7 +62,18 @@ let basic_math_testcases =
     end
   ]
 
+let test_wrap_around _ =
+  let open Params.Edwards25519 in
+  let z = Z.of_string "2367685864793918820760658281706469898440682783741725977504635972868015130552574255946297729751531955922668158411754362626067829855208980039009695126303158" in
+  let z_mod_l = Z.of_string "2015312323900227545039973048451112962192803170366412514267238242679089760755" in
+  let expected = scale base z_mod_l in
+  let actual = scale base z in
+  assert_eq_point expected actual
+
+
 let _ =
   "Parameters_suite" >::: [ "codec" >::: codec_testcases
-                          ; "basic_math" >::: basic_math_testcases]
+                          ; "basic_math" >::: basic_math_testcases
+                          ; "wrap_around" >:: test_wrap_around
+                          ]
   |> run_test_tt_main

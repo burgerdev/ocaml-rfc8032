@@ -67,7 +67,10 @@ module Edwards(P: PARAMS) = struct
 
   let base = G.Point (fst P.base_point, snd P.base_point)
 
-  let scale p s = Gops.scale_constant_time (P.n + 1) p s
+  let scale p s =
+    (* TODO: figure out the right place to put this boundary condition *)
+    let s = Z.erem s P.l in
+    Gops.scale_constant_time (P.n + 1) p s
 
   let decode_point buf =
     let sign = Serde.bit_at buf (P.b - 1) in
