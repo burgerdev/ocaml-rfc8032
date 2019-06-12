@@ -53,6 +53,9 @@ let basic_math_testcases =
   ; "1 + 0" >:: begin fun _ ->
       assert_eq_point base G.(base + zero)
     end
+  ; "l * 1" >:: begin fun _ ->
+      assert_eq_point G.zero (scale base P.l)
+    end
   ; "F: 5 / 1" >:: begin fun _ ->
       let five = Z.(~$5) in
       assert_eq_z five F.(five / Z.one)

@@ -20,7 +20,9 @@ module type PARAMS = sig
   val a: Z.t
 
   val base_point: Z.t * Z.t
+  (* group generator *)
   val l: Z.t
+  (* group order *)
 end
 
 module Params25519: PARAMS = struct
