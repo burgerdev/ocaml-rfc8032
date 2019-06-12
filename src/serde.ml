@@ -15,6 +15,15 @@ let z_of_cstruct num_bits buf =
   (* read Z from LE encoded string *)
   Cstruct.to_string dstbuf |> Z.of_bits
 
+let cstruct_of_z num_bits z =
+  let rem_bit = num_bits mod 8 in
+  let num_bytes = if rem_bit > 0 then failwith "cstruct_of_z expects bit size to be a multiple of 8" else num_bits / 8 in
+  let buf = Cstruct.create num_bytes in
+  let s = Z.to_bits z in
+  let n = min (String.length s) num_bytes in
+  Cstruct.blit_from_string s 0 buf 0 n;
+  buf
+
 let bit_at buf i =
   let byte_index = i / 8 in
   let bit_index = i mod 8 in

@@ -3,15 +3,16 @@ open OUnit
 
 open Rfc8032.Internals
 
+let assert_eq_cstruct exp act = assert_equal ~printer:(Fmt.strf "%a" Cstruct.hexdump_pp) exp act
+let assert_eq_z exp act = assert_equal ~printer:Z.to_string exp act
+
 type z_of_cstruct_testcase = {data: string; bits: int; expected_result: int}
 
 let z_of_cstruct_testcases = List.map begin fun {data; bits; expected_result} ->
     Fmt.strf "data=%s,bits=%d" data bits >:: fun _ ->
       let buf = Cstruct.of_hex data in
       let actual_result = Serde.z_of_cstruct bits buf in
-      assert_equal ~printer:(Fmt.strf "%a" Z.pp_print)
-        (Z.of_int expected_result)
-        actual_result
+      assert_eq_z (Z.of_int expected_result) actual_result
   end
     [ {data="ff"; bits=8; expected_result=255}
     ; {data="ff"; bits=7; expected_result=127}
@@ -44,6 +45,23 @@ let z_of_cstruct_testcases = List.map begin fun {data; bits; expected_result} ->
     ; {data="0a"; bits=3; expected_result=2}
     ; {data="0a"; bits=2; expected_result=2}
     ; {data="0a"; bits=1; expected_result=0}
+    ]
+
+type cstruct_of_z_testcase = {z:Z.t; bits:int; expected_result:string}
+
+let cstruct_of_z_testcases = List.map begin fun {z; bits; expected_result} ->
+    Fmt.strf "z=%a,bits=%d" Z.pp_print z bits >:: fun _ ->
+      let expected_result = Cstruct.of_hex expected_result in
+      let actual_result = Serde.cstruct_of_z bits z in
+      assert_eq_cstruct expected_result actual_result;
+      let roundtripped_z = Serde.z_of_cstruct bits actual_result in
+      assert_eq_z Z.(z land (one lsl bits - one)) roundtripped_z
+  end
+    [ {z=Z.(~$255); bits=8; expected_result="ff"}
+    (* ; {z=Z.(~$255); bits=7; expected_result="7f"} *)
+    ; {z=Z.(one lsl 256 - one); bits=256; expected_result="ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}
+    ; {z=Z.(one lsl 256 - one); bits=16; expected_result="ffff"}
+    ; {z=Z.(one lsl 255); bits=256; expected_result="0000000000000000000000000000000000000000000000000000000000000080"}
     ]
 
 type bit_at_testcase = {data: string; index: int; expected_result: int}
@@ -120,6 +138,7 @@ let set_bit_at_testcases = List.map begin fun {data; index; expected_result} ->
 
 let _ =
   "Serialization_suite" >::: [ "z_of_cstruct" >::: z_of_cstruct_testcases
+                             ; "cstruct_of_z" >::: cstruct_of_z_testcases
                              ; "bit_at" >::: bit_at_testcases
                              ; "set_bit_at" >::: set_bit_at_testcases ]
   |> run_test_tt_main
