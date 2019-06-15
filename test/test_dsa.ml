@@ -21,8 +21,29 @@ let test_signature _ =
   let actual_signature = sign (private_key_of_cstruct secret_key) Cstruct.empty |> encode_signature in
   assert_eq_cstruct expected_signature actual_signature
 
+let test_verify _ =
+  let open Rfc8032.Internals.Dsa.EdDSA25519 in
+  let secret_key_bytes = Cstruct.of_hex "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60" in
+  let signature_bytes = Cstruct.of_hex "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b" in
+  let public_key = private_key_of_cstruct secret_key_bytes |> public_key_of_private_key in
+  let signature = signature_of_cstruct signature_bytes in
+  assert_equal true @@ verify public_key signature Cstruct.empty
+
+let test_verify_wrong_msg _ =
+  let open Rfc8032.Internals.Dsa.EdDSA25519 in
+  let secret_key_bytes = Cstruct.of_hex "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60" in
+  let signature_bytes = Cstruct.of_hex "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b" in
+  let public_key = private_key_of_cstruct secret_key_bytes |> public_key_of_private_key in
+  let signature = signature_of_cstruct signature_bytes in
+  assert_equal false @@ verify public_key signature @@ Cstruct.of_hex "42"
+
+
+
+
 let _ =
   "Dsa_suite" >::: [ "private_to_public" >:: test_private_to_public
                    ; "test_signature" >:: test_signature
+                   ; "test_verify" >:: test_verify
+                   ; "test_verify_wrong_msg" >:: test_verify_wrong_msg
                    ]
   |> run_test_tt_main
