@@ -3,3 +3,8 @@
   (libraries rfc8032 oUnit)
   (modules test_rfc)
 )
+(test
+  (name curve)
+  (libraries rfc8032 zarith)
+  (modules curve)
+)

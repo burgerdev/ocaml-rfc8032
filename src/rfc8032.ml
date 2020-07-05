@@ -1,3 +1,4 @@
+module Curve = Curve
 
 type verification_result = Valid | Invalid
 
@@ -19,17 +20,25 @@ module type T = sig
 end
 
 
-module Ed25519: T with type data = string = struct
-  type private_key = string
-  type public_key = string
-  type signature = string
-  type data = string
+module Ed25519: T with type data = Cstruct.t = struct
+  module C = Curve.Naive25519
+  type private_key = Z.t
+  type public_key = C.t
+  type signature = Signature of string (* TODO!! *)
+  type data = Cstruct.t
 
-  let private_key_of_hex hex = hex
-  let public_key_of_hex hex = hex
-  let data_of_hex hex = hex
-  let hex_of_signature signature = signature
-  let signature_of_hex hex = hex
+  let private_key_of_hex hex = 
+    Hex.to_string (`Hex hex)
+    |> Z.of_bits
+    (* TODO: Do we need to reduce by p? *)
+
+  let public_key_of_hex hex =
+    Hex.to_cstruct (`Hex hex)
+    |> C.decode
+  let data_of_hex hex =
+    Hex.to_cstruct (`Hex hex)
+  let hex_of_signature = function Signature signature -> signature
+  let signature_of_hex hex = Signature hex
 
   let sign _priv _data = failwith "not implemented"
   let verify _pub _signature _data = failwith "not implemented"

@@ -1,4 +1,5 @@
 (library
  (name rfc8032)
  (public_name rfc8032)
+ (libraries cstruct hex nocrypto)
 )
