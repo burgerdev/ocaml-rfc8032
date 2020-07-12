@@ -1,6 +1,6 @@
 (test
   (name test_rfc)
-  (libraries rfc8032 oUnit)
+  (libraries rfc8032 ounit2)
   (modules test_rfc)
 )
 (test

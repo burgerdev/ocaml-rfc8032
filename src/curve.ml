@@ -32,17 +32,6 @@ module F = struct
   let ( / ) x y = x * invert y
   let ( - ) x y = Z.(erem (x - y) p)
 
-(*
-   To find a square root of a,
-   first compute the candidate root x = a^((p+3)/8) (mod p).  Then there
-   are three cases:
-
-      x^2 = a (mod p).  Then x is a square root.
-
-      x^2 = -a (mod p).  Then 2^((p-1)/4) * x is a square root.
-
-      a is not a square modulo p.
-*)
   let sqrt x2 = 
     let x = Z.(powm x2 ((p + ~$3) / ~$8) p) in
     let x2' = x * x in
@@ -50,11 +39,14 @@ module F = struct
       x
     else
       Z.(powm ~$2 ((p - ~$1) / ~$4) p) * x
+      (* TODO: should fail if not a sqrt! *)
 end
 
 module Naive25519 = struct
 
   type t = Point of Z.t * Z.t
+
+  let order = Z.(shift_left one 252 + of_string "27742317777372353535851937790883648493")
 
   let zero = Z.(Point (zero, one))
   let base = Z.(Point (of_string "15112221349535400772501151409588531511454012693041857206046113283949847762202", of_string "46316835694926478169428394003475163141307993866256225615783033603165251855960"))
@@ -104,9 +96,9 @@ module Naive25519 = struct
 *)
   let encode = function Point(x, y) ->
     (* figure out "sign" of x *)
-    let x' = F.(zero - x) in
     let maybe_high_bit = 
-      if String.compare Z.(to_bits x) Z.(to_bits x') > 0 then
+    (* TODO: use mutable cstruct operations instead. *)
+      if Z.testbit x 0 then
         Z.(one lsl 255)
       else
         Z.zero
@@ -127,7 +119,7 @@ module Naive25519 = struct
     let x' = F.(zero - x) in
     (* Rearrange so that x is "negative" and x' is positive. *)
     let x, x' = 
-      if String.compare Z.(to_bits x) Z.(to_bits x') > 0 then 
+      if Z.testbit x 0 then 
         x, x'
       else
         x', x

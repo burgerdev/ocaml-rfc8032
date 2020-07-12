@@ -21,11 +21,16 @@ let execute = function {algorithm; secret_key_hex; public_key_hex; message_hex; 
     | _ -> failwith "test function not implemented"
   in
   let module M = (val m) in
+  (* Test if serde functions are inverses. *)
+  let public_key_hex' = M.private_key_of_hex secret_key_hex |> M.public_key_of_private_key |> M.hex_of_public_key in
+  assert_equal ~printer:(fun x -> x) ~msg:"could not reconstruct public key" public_key_hex public_key_hex';
+  let public_key_hex' = M.public_key_of_hex public_key_hex |> M.hex_of_public_key in
+  assert_equal ~printer:(fun x -> x) ~msg:"public key serde does not work correctly" public_key_hex public_key_hex';
   let sig_out =
     M.sign (M.private_key_of_hex secret_key_hex) (M.data_of_hex message_hex)
     |> M.hex_of_signature
   in
-  assert_equal signature_hex sig_out;
+  assert_equal ~printer:(fun x -> x) ~msg:"signature does not match expectation" signature_hex sig_out;
   let result = M.verify (M.public_key_of_hex public_key_hex) (M.signature_of_hex signature_hex) (M.data_of_hex message_hex) in
   assert_equal Rfc8032.Valid result
 
