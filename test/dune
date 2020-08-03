@@ -8,3 +8,9 @@
   (libraries rfc8032 zarith)
   (modules curve)
 )
+(test
+  (name test_field25519)
+  (libraries field25519 zarith hex ounit2)
+  (modules test_field25519)
+  (ocamlopt_flags -g)
+)
