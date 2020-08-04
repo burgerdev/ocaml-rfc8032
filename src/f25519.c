@@ -103,7 +103,7 @@ void mult_into(const uint32_t x[F25519_NUM_LIMBS], uint32_t y[F25519_NUM_LIMBS])
 
 void redc(const uint32_t t[2*F25519_NUM_LIMBS], uint32_t s[F25519_NUM_LIMBS]) {
   uint32_t T[2*F25519_NUM_LIMBS+1] = {0};
-  uint32_t S[F25519_NUM_LIMBS+1] = {0};
+  uint32_t* S = T+F25519_NUM_LIMBS;
   memcpy(T, t, 2*F25519_NUM_BYTES);
 
   // TODO: this is more or less from Wikipedia, consider doing the carry in one pass as in mult().
@@ -123,10 +123,7 @@ void redc(const uint32_t t[2*F25519_NUM_LIMBS], uint32_t s[F25519_NUM_LIMBS]) {
     }
   }
 
-  // TODO: I don't think S is needed at all, just do pointer arithmetic on T.
-  memcpy(S, T+F25519_NUM_LIMBS, (F25519_NUM_LIMBS+1)*F25519_LIMB_SIZE_BYTES);
   if (S[F25519_NUM_LIMBS] > 0 || comp(S, F25519_P) >= 0) {
-    //printf("OH NO! CUSTOM SUBTRACTION!\n");
     uint64_t carry = 0;
     for (int i=0; i<F25519_NUM_LIMBS; i++) {
       carry += F25519_P[i];
@@ -134,8 +131,6 @@ void redc(const uint32_t t[2*F25519_NUM_LIMBS], uint32_t s[F25519_NUM_LIMBS]) {
       S[i] = LOWER_HALF(carry);
       carry = UPPER_HALF(carry) ? 1 : 0; // detects the wrap-around
     }
-    // TODO: this is not actually needed, is it? It will just correct the MSB which we don't copy to the result.
-    S[F25519_NUM_LIMBS] -= LOWER_HALF(carry);
   }
   memcpy(s, S, F25519_NUM_BYTES);
 }
@@ -148,6 +143,7 @@ void pr_num(const char* msg, const uint32_t* x, size_t n) {
 void f25519_decode(const uint8_t in[F25519_NUM_BYTES], uint32_t x[F25519_NUM_LIMBS]) {
   uint32_t tmp[2*F25519_NUM_LIMBS] = {0};
   decode(in, x);
+  // TODO: this multiplication could be optimized for the special case that rr fits into a single limb.
   mult(x, rr, tmp);
   redc(tmp, x);
 }
