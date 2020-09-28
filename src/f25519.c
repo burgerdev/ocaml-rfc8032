@@ -68,17 +68,26 @@ uint32_t add(const uint32_t x[F25519_NUM_LIMBS], const uint32_t y[F25519_NUM_LIM
 }
 
 void mult(const uint32_t x[F25519_NUM_LIMBS], const uint32_t y[F25519_NUM_LIMBS], uint32_t out[2*F25519_NUM_LIMBS]) {
-  // Clear output.
-  memset(out, 0, 2*F25519_NUM_LIMBS*F25519_LIMB_SIZE_BYTES);
-
   uint64_t hi_acc = 0;
   uint64_t lo_acc = 0;
   uint64_t tmp = 0;
-  int i, j, n, min_j, max_j;
-  for (n=0; n<2*F25519_NUM_LIMBS; n++) {
-    min_j = n < F25519_NUM_LIMBS ? 0 : n - F25519_NUM_LIMBS + 1;
-    max_j = n < F25519_NUM_LIMBS ? n : F25519_NUM_LIMBS - 1;
-    for (j=min_j; j<=max_j; j++) {
+  int i, j, n;
+  for (n=0; n<F25519_NUM_LIMBS; n++) {
+    for (j=0; j<=n; j++) {
+      i = n - j;
+      tmp = MULT_TO_64(x[i], y[j]);
+      lo_acc += LOWER_HALF(tmp);
+      hi_acc += UPPER_HALF(tmp);
+    }
+    out[n] = LOWER_HALF(lo_acc);
+    hi_acc += UPPER_HALF(lo_acc);
+
+    // reset for next iteration
+    lo_acc = LOWER_HALF(hi_acc);
+    hi_acc = UPPER_HALF(hi_acc);
+  }
+  for (n=F25519_NUM_LIMBS; n<2*F25519_NUM_LIMBS; n++) {
+    for (j=n - 7; j<F25519_NUM_LIMBS; j++) {
       i = n - j;
       tmp = MULT_TO_64(x[i], y[j]);
       lo_acc += LOWER_HALF(tmp);

@@ -131,3 +131,19 @@ module Naive25519 = struct
 end
 
 module Curve25519: Curve = Naive25519
+
+
+module Donna = struct 
+  open Bigarray
+type t = (char, int8_unsigned_elt, c_layout) Array1.t
+external c_curve25519_donna: t -> t -> t -> unit = "caml_curve25519_donna" [@@noalloc]
+  type data = Cstruct.t
+
+  let base =
+    let blob = Cstruct.create 32 in
+    Cstruct.set_uint8 blob 0 9;
+    blob
+
+  let curve25519 into secret public = c_curve25519_donna (Cstruct.to_bigarray into) (Cstruct.to_bigarray secret) (Cstruct.to_bigarray public)
+
+end

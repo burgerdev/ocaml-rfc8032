@@ -9,6 +9,7 @@ external c_encode: elem -> data -> unit = "caml_f25519_encode" [@@noalloc]
 external c_mul: elem -> elem -> elem -> unit = "caml_f25519_mul" [@@noalloc]
 external c_mul_into: elem -> elem -> unit = "caml_f25519_mul_into" [@@noalloc]
 
+
 type t = elem
 
 let of_cstruct data =
@@ -40,3 +41,37 @@ let ( * ) x y =
 
 let ( *= ) x y =
   c_mul_into x y
+
+module Donna = struct 
+  type t = elem
+  external c_fmul: elem -> elem -> elem -> unit = "caml_fmul" [@@noalloc]
+  external c_fexpand: elem -> elem -> unit = "caml_fexpand" [@@noalloc]
+  external c_fcontract: elem -> elem -> unit = "caml_fcontract" [@@noalloc]
+  let size = 80
+let of_cstruct data =
+  let t = Cstruct.create size |> Cstruct.to_bigarray in
+  c_fexpand t (Cstruct.to_bigarray data);
+  t
+
+let to_cstruct t =
+  let data = Cstruct.create 32 in
+  c_fcontract (Cstruct.to_bigarray data) t;
+  data
+
+let of_z z =
+  let bits = Z.to_bits z in
+  let data = Cstruct.create 32 in
+  let n = min (String.length bits) 32 in
+  Cstruct.blit_from_string bits 0 data 0 n;
+  of_cstruct data
+
+let to_z t =
+  to_cstruct t
+  |> Cstruct.to_string
+  |> Z.of_bits
+
+let ( * ) x y =
+  let t = Cstruct.create size |> Cstruct.to_bigarray in
+  c_fmul t x y;
+  t
+end

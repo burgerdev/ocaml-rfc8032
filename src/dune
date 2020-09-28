@@ -11,6 +11,6 @@
  (modules field25519)
  (foreign_stubs 
   (language c) 
-  (names f25519 f25519_stubs) 
+  (names f25519 f25519_stubs curve25519-donna) 
   (flags :standard -Wall -Wextra -pedantic --std=c99))
 )
