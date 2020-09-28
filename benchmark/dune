@@ -1,0 +1,10 @@
+(executable
+  (name curveops)
+  (libraries rfc8032 field25519 hacl_x25519 zarith benchmark)
+  (modules curveops)
+)
+(executable
+  (name fieldops)
+  (libraries field25519 zarith hex benchmark)
+  (modules fieldops)
+)
